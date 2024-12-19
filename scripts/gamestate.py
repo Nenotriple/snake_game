@@ -138,12 +138,12 @@ class MainMenu:
 
     def _draw_title(self, surface):
         """Draw the title on the screen."""
-        draw_text(surface, "SNAKE", 64, self.screen_width // 2, 45)
+        draw_text(surface, "SNAKE", 64, self.screen_width // 2, 60)
 
 
     def _draw_menu_options(self, surface):
         """Draw the menu options on the screen."""
-        start_y = self.screen_height // 2 + 40
+        start_y = self.screen_height // 2 + 80
         for i, option in enumerate(self.menu_options):
             color = YELLOW if i == self.selected_option else WHITE
             if option == "Theme":
@@ -157,7 +157,7 @@ class MainMenu:
 
     def _draw_instructions(self, surface):
         """Draw the instructions at the bottom of the screen."""
-        draw_text(surface, "Up/Down: Select  -  Left/Right: Adjust  -  Space/Enter: Start", 24, self.screen_width // 2, self.screen_height - 30)
+        draw_text(surface, "Up/Down: Select  -  Left/Right: Adjust  -  Space/Enter: Start", 24, self.screen_width // 2, self.screen_height - 10)
 
 
 #endregion
