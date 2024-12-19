@@ -168,6 +168,7 @@ class DemoGame:
             self.collision_detector.check_self_collision(self.snake)):
             self.snake = Snake(self.snake.theme)
             self.food = Food(self.food.theme, self.snake)
+            self.navigation_handler = Pathfinding(self.snake, self.collision_detector)
             self.score.reset()
 
 
