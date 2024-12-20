@@ -14,7 +14,7 @@ from scripts.constants import *
 from scripts.food import Food
 from scripts.theme import Theme
 from scripts.snake import Snake
-from scripts.demo import DemoGame
+from scripts.demo import DemoGame, Pathfinding
 from scripts.draw_text import draw_text
 from scripts.game_score import GameScore
 from scripts.collision_detection import CollisionDetection
@@ -56,6 +56,8 @@ class MainGame:
         self.difficulty = Difficulty.MEDIUM
         self.sound_manager = SoundManager()
         self.sound_manager.start_music()
+        self.autopilot_enabled = False
+        self.navigation_handler = None
         self.initialize_game()
 
 
@@ -71,6 +73,8 @@ class MainGame:
         self.current_state = GameState.MENU
         self.demo_game = DemoGame(self.current_theme, score=self.score)
         self.score.reset()
+        self.navigation_handler = Pathfinding(self.snake, self.collision_detector)
+        self.autopilot_enabled = False
 
 
 # --------------------------------------
@@ -121,14 +125,20 @@ class MainGame:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.current_state = GameState.PAUSED
-            elif event.key == pygame.K_UP and self.snake.direction != DOWN:
-                self.snake.direction = UP
-            elif event.key == pygame.K_DOWN and self.snake.direction != UP:
-                self.snake.direction = DOWN
-            elif event.key == pygame.K_LEFT and self.snake.direction != RIGHT:
-                self.snake.direction = LEFT
-            elif event.key == pygame.K_RIGHT and self.snake.direction != LEFT:
-                self.snake.direction = RIGHT
+            elif event.key == pygame.K_F1:
+                self.autopilot_enabled = True
+            elif not self.autopilot_enabled:
+                if event.key == pygame.K_UP and self.snake.direction != DOWN:
+                    self.snake.direction = UP
+                elif event.key == pygame.K_DOWN and self.snake.direction != UP:
+                    self.snake.direction = DOWN
+                elif event.key == pygame.K_LEFT and self.snake.direction != RIGHT:
+                    self.snake.direction = LEFT
+                elif event.key == pygame.K_RIGHT and self.snake.direction != LEFT:
+                    self.snake.direction = RIGHT
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_F1:
+                self.autopilot_enabled = False
 
 
     def handle_pause_menu_input(self, event):
@@ -162,6 +172,10 @@ class MainGame:
 
 
     def handle_game_logic(self):
+        if self.autopilot_enabled:
+            next_direction = self.navigation_handler.get_next_direction(self.food.position)
+            if next_direction:
+                self.snake.direction = next_direction
         self.snake.move()
         head = self.snake.body[0]
         if self.collision_detector.check_food_collision(head, self.food.position):
