@@ -19,6 +19,7 @@ from scripts.draw_text import draw_text
 from scripts.game_score import GameScore
 from scripts.collision_detection import CollisionDetection
 from scripts.gamestate import GameState, Difficulty, MainMenu, PauseMenu, GameOver
+from scripts.sound_manager import SoundManager
 
 
 #endregion
@@ -53,6 +54,8 @@ class MainGame:
         self.base_fps = BASE_FPS
         self.game_speed_string = f"Speed: +0%"
         self.difficulty = Difficulty.MEDIUM
+        self.sound_manager = SoundManager()
+        self.sound_manager.start_music()
         self.initialize_game()
 
 
@@ -84,7 +87,10 @@ class MainGame:
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                self.sound_manager.stop_music()
                 return False
+            if event.type == pygame.USEREVENT + 1:  # Music end event
+                self.sound_manager.handle_music_end()
             if self.current_state == GameState.MENU:
                 self.handle_main_menu_input(event)
             elif self.current_state == GameState.PLAYING:
