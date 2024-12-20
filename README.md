@@ -3,11 +3,12 @@
 A copy of the classic Snake game using Python and Pygame, featuring multiple themes, difficulties, and a demo/kiosk mode.
 
 
-![snake_game_cover](https://github.com/user-attachments/assets/693240cc-9e17-4998-9063-785c716fc5bd)
+![snake_game_vid](https://github.com/user-attachments/assets/ae654f8f-3ae6-4453-b046-0afd766531b4)
 
 
 ![snake_game_themes](https://github.com/user-attachments/assets/52e39d62-d42d-4ba0-ae6c-53b9017ac0e7)
 _(themes)_
+
 
 ## Features
 
