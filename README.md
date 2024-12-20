@@ -22,9 +22,8 @@ _(themes)_
 - 🏆 High Score System
 - ⏸️ Pause Menu
 - 🤖 AI Demo Mode in Main Menu
-- 🎯 Smooth Controls
 - 🌈 Color Gradient Snake Body
-- 📊 Score Display
+- 🎵 8 Music tracks
 
 
 ## How to Play
