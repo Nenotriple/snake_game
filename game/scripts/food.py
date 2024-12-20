@@ -22,7 +22,9 @@ from scripts.constants import GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, BORDER_THICKNE
 
 class Food:
     """
-    Class for the food object.
+    Handle the food object for the game.
+
+    The snake grows when it eats the food.
 
     Attributes:
         theme (Theme): The theme for the game.

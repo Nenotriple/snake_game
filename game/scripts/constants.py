@@ -1,4 +1,4 @@
-"""This module contains the constants used in the Snake game."""
+"""This module contains the constants used in the game."""
 
 
 # Constants

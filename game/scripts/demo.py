@@ -23,7 +23,7 @@ from scripts.constants import UP, DOWN, LEFT, RIGHT, GRID_WIDTH, GRID_HEIGHT
 
 class Pathfinding:
     """
-    Class to handle pathfinding for the snake.
+    Handle pathfinding for the snake.
 
     Attributes:
         snake (Snake): The snake object.
@@ -116,7 +116,7 @@ class Pathfinding:
 
 class DemoGame:
     """
-    The demo game class to handle the game logic.
+    Handle the demo/kiosk gameplay. This plays the game automatically during the main menu.
 
     Attributes:
         snake (Snake): The snake object.

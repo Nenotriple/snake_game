@@ -1,6 +1,6 @@
 class CollisionDetection:
     """
-    Class for collision detection.
+    Handle the games collision detection.
 
     Attributes:
         grid_width: The width of the grid.

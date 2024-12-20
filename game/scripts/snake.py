@@ -17,7 +17,7 @@ from scripts.constants import RIGHT, CELL_SIZE, BORDER_THICKNESS
 
 class Snake:
     """
-    The snake object class.
+    Handles the snake object for the game.
 
     Attributes:
         body (list): The list of body segments.

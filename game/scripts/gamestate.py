@@ -57,7 +57,7 @@ class Difficulty(Enum):
 
 class MainMenu:
     """
-    Class for the main menu.
+    Handle the main menu of the game.
 
     Attributes:
         screen_width (int): The width of the screen.
@@ -167,7 +167,7 @@ class MainMenu:
 
 class PauseMenu:
     """
-    Class for the pause menu.
+    Handles the pause menu of the game.
 
     Attributes:
         screen_width (int): The width of the screen.
@@ -208,7 +208,7 @@ class PauseMenu:
 
 class GameOver:
     """
-    Class for the game over screen.
+    Handles the game over screen.
 
     Attributes:
         screen_width (int): The width of the screen.

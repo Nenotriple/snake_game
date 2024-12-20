@@ -3,7 +3,7 @@ from scripts.constants import WHITE, BLACK, YELLOW, RED, GREEN, MAGENTA, LIGHT_B
 
 class Theme:
     """
-    The game theme class.
+    Handles the game themes.
 
     Colors are represented as RGB tuples.
 

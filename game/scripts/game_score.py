@@ -17,7 +17,7 @@ from scripts.draw_text import draw_text
 
 class GameScore:
     """
-    Game score class.
+    Handle the game score.
 
     Attributes:
         score (int): The current score.
