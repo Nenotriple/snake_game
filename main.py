@@ -62,6 +62,7 @@ class MainGame:
         self.food = Food(self.current_theme, self.snake)
         self.collision_detector = CollisionDetection(GRID_WIDTH, GRID_HEIGHT)
         self.menu = MainMenu(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.menu.selected_theme_index = self.current_theme_index
         self.pause_menu = PauseMenu(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.game_over = GameOver(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.current_state = GameState.MENU
