@@ -7,7 +7,7 @@ import pygame
 
 
 # Local
-from scripts.constants import RIGHT, CELL_SIZE, BORDER_THICKNESS
+from scripts.constants import RIGHT, CELL_SIZE, BORDER_THICKNESS, GRID_WIDTH, GRID_HEIGHT
 
 
 #endregion
@@ -42,16 +42,16 @@ class Snake:
         self.theme = theme
 
 
-    def move(self):
-        """Move the snake in the current direction."""
-        head_x, head_y = self.body[0]
-        dir_x, dir_y = self.direction
-        new_head = (head_x + dir_x, head_y + dir_y)
+    def move(self, peaceful_mode=False):
+        """Move snake by one step."""
+        new_head = (self.body[0][0] + self.direction[0], self.body[0][1] + self.direction[1])
+        if peaceful_mode:
+            new_head = (new_head[0] % GRID_WIDTH, new_head[1] % GRID_HEIGHT)
+        self.body.insert(0, new_head)
         if not self.growing:
             self.body.pop()
         else:
             self.growing = False
-        self.body.insert(0, new_head)
 
 
     def grow(self):
@@ -61,17 +61,18 @@ class Snake:
 
     def draw(self, surface):
         """Draw the snake on the screen."""
-        self.draw_snake_head(surface)
         self.draw_snake_body(surface)
+        self.draw_snake_head(surface)  # Draw head last so it's always on top
 
 
     def draw_snake_body(self, surface):
         """Draw the snake body."""
         if len(self.body) > 1:
-            for i, segment in enumerate(self.body[1:]):
+            # Draw segments in reverse order so later segments appear on top
+            for i, segment in enumerate(reversed(self.body[1:])):
                 x, y = segment
-                # Calculate gradient
-                gradient_factor = i / (len(self.body) - 1)
+                # Calculate gradient from tail to neck
+                gradient_factor = (len(self.body) - 2 - i) / (len(self.body) - 1)
                 body_color = self._blend_colors(self.theme.body_color, self.theme.tail_color, gradient_factor)
                 pygame.draw.rect(surface, body_color, pygame.Rect(x * CELL_SIZE + BORDER_THICKNESS, y * CELL_SIZE + BORDER_THICKNESS, CELL_SIZE, CELL_SIZE))
 

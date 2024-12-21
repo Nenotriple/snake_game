@@ -25,7 +25,7 @@ import pygame
 
 
 # Local
-from scripts.constants import WHITE, YELLOW
+from scripts.constants import WHITE, YELLOW, UP, DOWN, LEFT, RIGHT
 from scripts.theme import Theme
 from scripts.draw_text import draw_text
 
@@ -110,39 +110,40 @@ class MainMenu:
             elif event.key == pygame.K_DOWN:
                 self.selected_option = (self.selected_option + 1) % len(self.menu_options)
             elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
-                if self.menu_options[self.selected_option] == "Mode":
-                    self._change_mode(event)
-                elif self.menu_options[self.selected_option] == "Difficulty":
-                    self._change_difficulty(event)
-                elif self.menu_options[self.selected_option] == "Theme":
-                    self._change_theme(event)
+                self._handle_options_change(event)
         return GameState.MENU, self.selected_theme_index, self.selected_difficulty
+
+
+    def _handle_options_change(self, event):
+        if self.menu_options[self.selected_option] == "Mode":
+            self._change_mode(event)
+        elif self.menu_options[self.selected_option] == "Difficulty":
+            self._change_difficulty(event)
+        elif self.menu_options[self.selected_option] == "Theme":
+            self._change_theme(event)
+
+
+    def _adjust_selected_option(self, current_value, options, direction_left):
+        """Generic method to change a selected option in a circular list."""
+        current_idx = options.index(current_value)
+        if direction_left:
+            return options[(current_idx - 1) % len(options)]
+        return options[(current_idx + 1) % len(options)]
 
 
     def _change_theme(self, event):
         """Change the selected theme based on the input event."""
-        if event.key == pygame.K_LEFT:
-            self.selected_theme_index = (self.selected_theme_index - 1) % len(self.themes)
-        else:
-            self.selected_theme_index = (self.selected_theme_index + 1) % len(self.themes)
+        self.selected_theme_index = self._adjust_selected_option(self.selected_theme_index, range(len(self.themes)), event.key == pygame.K_LEFT)
 
 
     def _change_difficulty(self, event):
         """Change the selected difficulty based on the input event."""
-        current_idx = self.difficulties.index(self.selected_difficulty)
-        if event.key == pygame.K_LEFT:
-            self.selected_difficulty = self.difficulties[(current_idx - 1) % len(self.difficulties)]
-        else:
-            self.selected_difficulty = self.difficulties[(current_idx + 1) % len(self.difficulties)]
+        self.selected_difficulty = self._adjust_selected_option(self.selected_difficulty, self.difficulties, event.key == pygame.K_LEFT)
 
 
     def _change_mode(self, event):
         """Change the selected game mode based on the input event."""
-        current_idx = self.modes.index(self.selected_mode)
-        if event.key == pygame.K_LEFT:
-            self.selected_mode = self.modes[(current_idx - 1) % len(self.modes)]
-        else:
-            self.selected_mode = self.modes[(current_idx + 1) % len(self.modes)]
+        self.selected_mode = self._adjust_selected_option(self.selected_mode, self.modes, event.key == pygame.K_LEFT)
 
 
 # --------------------------------------
@@ -179,6 +180,134 @@ class MainMenu:
     def _draw_instructions(self, surface):
         """Draw the instructions at the bottom of the screen."""
         draw_text(surface, "Up/Down: Select  -  Left/Right: Adjust  -  Space/Enter: Start", 24, self.screen_width // 2, self.screen_height - 10)
+
+
+#endregion
+################################################################################
+#region PlayingGame
+
+
+class PlayingGame:
+    """
+    Handles the active gameplay state.
+
+    Attributes:
+        snake (Snake): The snake object.
+        food (Food): The food object.
+        collision_detector (CollisionDetection): The collision detection handler.
+        score (GameScore): The score tracker.
+        navigation_handler (Pathfinding): The autopilot navigation system.
+        autopilot_enabled (bool): Whether autopilot mode is active.
+
+    Methods:
+        handle_input: Handle input events during gameplay.
+        update: Update game logic.
+        draw: Draw the game elements.
+    """
+
+    def __init__(self, snake, food, collision_detector, score):
+        self.snake = snake
+        self.food = food
+        self.collision_detector = collision_detector
+        self.score = score
+        self.navigation_handler = None
+        self.autopilot_enabled = False
+        self.game_mode = GameMode.CLASSIC
+
+
+    def set_navigation_handler(self, handler):
+        """Set the pathfinding handler for autopilot mode."""
+        self.navigation_handler = handler
+
+
+    def set_game_mode(self, mode):
+        """Set the current game mode."""
+        self.game_mode = mode
+
+
+# --------------------------------------
+# Input
+# --------------------------------------
+    def handle_input(self, event):
+        """Handle input events during gameplay."""
+        if event.type != pygame.KEYDOWN:
+            self._disable_autopilot(event)
+            return GameState.PLAYING
+        if event.key == pygame.K_ESCAPE:
+            return GameState.PAUSED
+        elif event.key == pygame.K_F1:
+            self._enable_autopilot()
+        elif not self.autopilot_enabled:
+            self._handle_snake_direction_input(event)
+        return GameState.PLAYING
+
+
+    def _disable_autopilot(self, event):
+        if event.type == pygame.KEYUP and event.key == pygame.K_F1:
+            self.autopilot_enabled = False
+
+
+    def _enable_autopilot(self):
+        self.autopilot_enabled = True
+
+
+    def _handle_snake_direction_input(self, event):
+        if event.key == pygame.K_UP and self.snake.direction != DOWN:
+            self.snake.direction = UP
+        elif event.key == pygame.K_DOWN and self.snake.direction != UP:
+            self.snake.direction = DOWN
+        elif event.key == pygame.K_LEFT and self.snake.direction != RIGHT:
+            self.snake.direction = LEFT
+        elif event.key == pygame.K_RIGHT and self.snake.direction != LEFT:
+            self.snake.direction = RIGHT
+
+
+# --------------------------------------
+# Update
+# --------------------------------------
+    def update(self):
+        """Update game logic."""
+        self._handle_autopilot()
+        head = self._update_snake_position()
+        peaceful_mode = self.game_mode == GameMode.PEACEFUL
+        if peaceful_mode:
+            head = self.collision_detector.wrap_position(head)
+            self.snake.body[0] = head
+        elif self.collision_detector.check_wall_collision(head):
+            return GameState.GAME_OVER
+        if self.collision_detector.check_self_collision(self.snake, peaceful_mode):
+            return GameState.GAME_OVER
+        self._handle_food_collision(head)
+        return GameState.PLAYING
+
+
+    def _handle_autopilot(self):
+        if self.autopilot_enabled and self.navigation_handler:
+            next_direction = self.navigation_handler.get_next_direction(self.food.position)
+            if next_direction:
+                self.snake.direction = next_direction
+
+
+    def _update_snake_position(self):
+        self.snake.move()
+        head = self.snake.body[0]
+        return head
+
+
+    def _handle_food_collision(self, head):
+        if self.collision_detector.check_food_collision(head, self.food.position):
+            self.snake.grow()
+            self.score.increment()
+            self.food.position = self.food.random_position(self.snake)
+
+
+# --------------------------------------
+# Draw
+# --------------------------------------
+    def draw(self, surface):
+        """Draw the game elements."""
+        self.snake.draw(surface)
+        self.food.draw(surface)
 
 
 #endregion

@@ -17,18 +17,31 @@ class CollisionDetection:
         self.grid_height = grid_height
 
 
-    def check_wall_collision(self, position):
-        """Check if the position is outside the play area."""
+    def check_wall_collision(self, position, peaceful_mode=False):
+        """Check if position collides with walls."""
         x, y = position
-        return x < 0 or x >= self.grid_width or y < 0 or y >= self.grid_height
+        if peaceful_mode:
+            return False
+        return (x < 0 or x >= self.grid_width or
+                y < 0 or y >= self.grid_height)
 
 
-    def check_self_collision(self, snake):
-        """Check if the snake has collided with itself."""
+    def wrap_position(self, position):
+        """Wrap position around screen edges."""
+        x, y = position
+        x = x % self.grid_width
+        y = y % self.grid_height
+        return (x, y)
+
+
+    def check_self_collision(self, snake, peaceful_mode=False):
+        """Check if snake collides with itself."""
+        if peaceful_mode:
+            return False
         head = snake.body[0]
         return head in snake.body[1:]
 
 
-    def check_food_collision(self, snake_head, food_position):
-        """Check if the snake has collided with the food."""
-        return snake_head == food_position
+    def check_food_collision(self, head, food_pos):
+        """Check if snake head collides with food."""
+        return head == food_pos

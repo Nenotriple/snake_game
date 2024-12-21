@@ -18,7 +18,7 @@ from scripts.demo import DemoGame, Pathfinding
 from scripts.draw_text import draw_text
 from scripts.game_score import GameScore
 from scripts.collision_detection import CollisionDetection
-from scripts.gamestate import GameState, Difficulty, MainMenu, PauseMenu, GameOver
+from scripts.gamestate import GameState, Difficulty, MainMenu, PlayingGame, PauseMenu, GameOver, GameMode
 from scripts.sound_manager import SoundManager
 
 
@@ -58,6 +58,8 @@ class MainGame:
         self.sound_manager.start_music()
         self.autopilot_enabled = False
         self.navigation_handler = None
+        self.playing_game = None
+        self.game_mode = GameMode.CLASSIC
         self.initialize_game()
 
 
@@ -75,6 +77,9 @@ class MainGame:
         self.score.reset()
         self.navigation_handler = Pathfinding(self.snake, self.collision_detector)
         self.autopilot_enabled = False
+        self.playing_game = PlayingGame(self.snake, self.food, self.collision_detector, self.score)
+        self.playing_game.set_game_mode(self.game_mode)
+        self.playing_game.set_navigation_handler(self.navigation_handler)
 
 
 # --------------------------------------
@@ -117,28 +122,15 @@ class MainGame:
         if difficulty != self.difficulty:
             self.difficulty = difficulty
         if new_state != self.current_state:
+            self.game_mode = self.menu.selected_mode
             self.initialize_game()
         self.current_state = new_state
 
 
     def handle_game_movement_input(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.current_state = GameState.PAUSED
-            elif event.key == pygame.K_F1:
-                self.autopilot_enabled = True
-            elif not self.autopilot_enabled:
-                if event.key == pygame.K_UP and self.snake.direction != DOWN:
-                    self.snake.direction = UP
-                elif event.key == pygame.K_DOWN and self.snake.direction != UP:
-                    self.snake.direction = DOWN
-                elif event.key == pygame.K_LEFT and self.snake.direction != RIGHT:
-                    self.snake.direction = LEFT
-                elif event.key == pygame.K_RIGHT and self.snake.direction != LEFT:
-                    self.snake.direction = RIGHT
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_F1:
-                self.autopilot_enabled = False
+        new_state = self.playing_game.handle_input(event)
+        if new_state != self.current_state:
+            self.current_state = new_state
 
 
     def handle_pause_menu_input(self, event):
@@ -172,28 +164,11 @@ class MainGame:
 
 
     def handle_game_logic(self):
-        if self.autopilot_enabled:
-            next_direction = self.navigation_handler.get_next_direction(self.food.position)
-            if next_direction:
-                self.snake.direction = next_direction
-        self.snake.move()
-        head = self.snake.body[0]
-        if self.collision_detector.check_food_collision(head, self.food.position):
-            self._process_food_collision()
-        if (self.collision_detector.check_wall_collision(head) or self.collision_detector.check_self_collision(self.snake)):
-            self._process_game_over_state()
-
-
-    def _process_food_collision(self):
-        self.snake.grow()
-        self.score.increment()
-        self.food.position = self.food.random_position(self.snake)
-
-
-    def _process_game_over_state(self):
-        is_high_score = self.score.high_scores.add_score(self.score.score)
-        self.game_over.set_high_score_status(is_high_score)
-        self.current_state = GameState.GAME_OVER
+        new_state = self.playing_game.update()
+        if new_state == GameState.GAME_OVER:
+            is_high_score = self.score.high_scores.add_score(self.score.score)
+            self.game_over.set_high_score_status(is_high_score)
+            self.current_state = GameState.GAME_OVER
 
 
 # --------------------------------------
@@ -234,8 +209,7 @@ class MainGame:
             self.demo_game.draw(self.screen)
             self.menu.draw(self.screen)
         elif self.current_state == GameState.PLAYING:
-            self.snake.draw(self.screen)
-            self.food.draw(self.screen)
+            self.playing_game.draw(self.screen)
         elif self.current_state == GameState.PAUSED:
             self.pause_menu.draw(self.screen, self.snake, self.food)
         elif self.current_state == GameState.GAME_OVER:
