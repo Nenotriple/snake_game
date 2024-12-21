@@ -50,6 +50,12 @@ class Difficulty(Enum):
     HARD = 0.0175
 
 
+class GameMode(Enum):
+    """For tracking the game mode."""
+    CLASSIC = "Classic"
+    PEACEFUL = "Peaceful"
+
+
 #endregion
 ################################################################################
 #region MainMenu
@@ -81,7 +87,9 @@ class MainMenu:
         self.selected_theme_index = 0
         self.difficulties = list(Difficulty)
         self.selected_difficulty = Difficulty.MEDIUM
-        self.menu_options = ["Play", "Difficulty", "Theme", "Exit"]
+        self.modes = list(GameMode)
+        self.selected_mode = GameMode.CLASSIC
+        self.menu_options = ["Play", "Mode", "Difficulty", "Theme", "Exit"]
         self.selected_option = 0
 
 
@@ -102,10 +110,12 @@ class MainMenu:
             elif event.key == pygame.K_DOWN:
                 self.selected_option = (self.selected_option + 1) % len(self.menu_options)
             elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
-                if self.menu_options[self.selected_option] == "Theme":
-                    self._change_theme(event)
+                if self.menu_options[self.selected_option] == "Mode":
+                    self._change_mode(event)
                 elif self.menu_options[self.selected_option] == "Difficulty":
                     self._change_difficulty(event)
+                elif self.menu_options[self.selected_option] == "Theme":
+                    self._change_theme(event)
         return GameState.MENU, self.selected_theme_index, self.selected_difficulty
 
 
@@ -126,6 +136,15 @@ class MainMenu:
             self.selected_difficulty = self.difficulties[(current_idx + 1) % len(self.difficulties)]
 
 
+    def _change_mode(self, event):
+        """Change the selected game mode based on the input event."""
+        current_idx = self.modes.index(self.selected_mode)
+        if event.key == pygame.K_LEFT:
+            self.selected_mode = self.modes[(current_idx - 1) % len(self.modes)]
+        else:
+            self.selected_mode = self.modes[(current_idx + 1) % len(self.modes)]
+
+
 # --------------------------------------
 # Draw
 # --------------------------------------
@@ -143,13 +162,15 @@ class MainMenu:
 
     def _draw_menu_options(self, surface):
         """Draw the menu options on the screen."""
-        start_y = self.screen_height // 2 + 80
+        start_y = self.screen_height // 2 + 50
         for i, option in enumerate(self.menu_options):
             color = YELLOW if i == self.selected_option else WHITE
-            if option == "Theme":
-                text = f"Theme: {self.themes[self.selected_theme_index].name}"
+            if option == "Mode":
+                text = f"Mode: {self.selected_mode.value}"
             elif option == "Difficulty":
                 text = f"Difficulty: {self.selected_difficulty.name}"
+            elif option == "Theme":
+                text = f"Theme: {self.themes[self.selected_theme_index].name}"
             else:
                 text = option
             draw_text(surface, text, 32, self.screen_width // 2, start_y + i * 40, color)
