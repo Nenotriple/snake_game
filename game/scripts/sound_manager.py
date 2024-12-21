@@ -2,6 +2,10 @@ import os
 import pygame
 import random
 
+
+FADE_MS = 1000
+
+
 class SoundManager:
     """
     Handles the game background music.
@@ -32,6 +36,8 @@ class SoundManager:
         self.playing = False
         self.remaining_tracks = []
         self.volume = 1.0
+        self.last_played_track = None
+        self.play_count = {}
         self._load_music_tracks()
         self._setup_events()
         pygame.mixer.music.set_volume(self.volume)
@@ -46,6 +52,7 @@ class SoundManager:
                 track_path = os.path.join(self.music_folder, file)
                 if os.path.exists(track_path):
                     self.tracks.append(track_path)
+                    self.play_count[track_path] = 0
         if not self.tracks:
             raise FileNotFoundError("No valid music tracks found")
 
@@ -55,32 +62,52 @@ class SoundManager:
         pygame.mixer.music.set_endevent(pygame.USEREVENT + 1)
 
 
-    def start_music(self, fade_ms=1000):
+    def _reset_playlist(self):
+        """Reset the playlist when all tracks have been played at least once."""
+        self.remaining_tracks = [track for track in self.tracks if self.play_count[track] < 2]
+        if not self.remaining_tracks:
+            self.play_count = {track: 0 for track in self.tracks}
+            self.remaining_tracks = self.tracks.copy()
+        random.shuffle(self.remaining_tracks)
+        # Ensure last played track isn't first in new playlist
+        if self.last_played_track and self.remaining_tracks and self.remaining_tracks[0] == self.last_played_track:
+            random.shuffle(self.remaining_tracks)
+
+
+    def start_music(self, fade_ms=FADE_MS):
         """Start playing music with optional fade-in."""
         if not self.tracks:
             return
         try:
-            pygame.mixer.music.load(self.tracks[0])
+            first_track = self.tracks[0]
+            pygame.mixer.music.load(first_track)
             pygame.mixer.music.play(fade_ms=fade_ms)
             self.playing = True
-            self.remaining_tracks = self.tracks[1:]
-            random.shuffle(self.remaining_tracks)
+            self.last_played_track = first_track
+            self.play_count[first_track] = 1
+            self._reset_playlist()
         except pygame.error as e:
             print(f"Error playing music: {e}")
             self.playing = False
 
 
-    def handle_music_end(self, fade_ms=1000):
+    def handle_music_end(self, fade_ms=FADE_MS):
         """Handle the end of a track with optional fade-in."""
         if not self.playing:
             return
         if not self.remaining_tracks:
-            self.remaining_tracks = self.tracks[1:]
-            random.shuffle(self.remaining_tracks)
+            self._reset_playlist()
         try:
             next_track = self.remaining_tracks.pop()
+            # Ensure we don't play the same track twice in a row
+            while next_track == self.last_played_track and self.remaining_tracks:
+                self.remaining_tracks.append(next_track)
+                next_track = self.remaining_tracks.pop()
+
             pygame.mixer.music.load(next_track)
             pygame.mixer.music.play(fade_ms=fade_ms)
+            self.last_played_track = next_track
+            self.play_count[next_track] += 1
         except pygame.error as e:
             print(f"Error playing next track: {e}")
             self.playing = False
@@ -106,7 +133,7 @@ class SoundManager:
             self.playing = True
 
 
-    def stop_music(self, fade_ms=1000):
+    def stop_music(self, fade_ms=FADE_MS):
         """Stop the currently playing music with optional fade-out."""
         self.playing = False
         pygame.mixer.music.fadeout(fade_ms)
