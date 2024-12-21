@@ -31,7 +31,7 @@ class SoundManager:
         self.current_track = 0
         self.playing = False
         self.remaining_tracks = []
-        self.volume = 0.5  # Default volume
+        self.volume = 1.0
         self._load_music_tracks()
         self._setup_events()
         pygame.mixer.music.set_volume(self.volume)
